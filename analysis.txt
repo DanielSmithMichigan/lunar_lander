@@ -1,0 +1,7 @@
+predicted vs actual cdf
+different state representations
+performance with quantile_thresholds limited to approximately 50%
+performance with 0->n quantiles
+sawtooth vs cosine performance
+exploration differences: linear decreasing vs up and down
+behavior with quantile quantile_thresholds limited to small ranges, but stepping from 0 -> 100%
