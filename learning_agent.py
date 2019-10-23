@@ -25,7 +25,9 @@ class LearningAgent:
         self.configuration = configuration
         self.env = gym.make(env_name)
         self.environment_step = 0
+        self.epsilon = 1.0
         self.sess = tf.Session()
+        self.evaluations = []
         self.memory_buffer = deque([], maxlen=self.hyperparameters["max_memory_buffer_size"])
         self.build_graphs()
         self.build_placeholders()
@@ -108,11 +110,7 @@ class LearningAgent:
     ):
         if len(self.memory_buffer) < self.hyperparameters["min_memory_buffer_size_for_training"]:
             return self.env.action_space.sample()
-        epsilon = current_epsilon(
-            hyperparameters=self.hyperparameters,
-            environment_step=self.environment_step,
-        )
-        if np.random.uniform() < epsilon:
+        if np.random.uniform() < self.epsilon:
             return self.env.action_space.sample()
         return self.get_best_action(state)
     def get_best_action(
@@ -158,7 +156,6 @@ class LearningAgent:
             next_state = np.append(next_state, [step_idx / self.hyperparameters["max_episode_length"]])
             if step_idx >= self.hyperparameters["max_episode_length"]:
                 is_terminal = True
-                reward = -100
             total_reward += reward
             memory_entry = np.array(np.zeros(constants.NUM_MEMORY_ENTRIES), dtype=object)
             memory_entry[constants.STATE] = current_state
@@ -206,16 +203,20 @@ class LearningAgent:
         self.sess.run(tf.global_variables_initializer())
         self.sess.run(self.hard_copy)
         for episode_idx in range(self.hyperparameters["max_episodes"]):
-            self.overview_graph.init_episode()
-            reward = self.episode(
+            if self.configuration["graph"]:
+                self.overview_graph.init_episode()
+            self.episode(
                 evaluative=False,
                 disable_random_actions=False,
             )
-            epsilon = current_epsilon(
-                hyperparameters=self.hyperparameters,
-                environment_step=self.environment_step,
+            reward = self.episode(
+                evaluative=True,
+                disable_random_actions=True,
             )
-            self.overview_graph.end_episode(epsilon, reward)
+            self.evaluations.append(reward)
             print("ep: "+str(episode_idx) + " reward: "+str(self.overview_graph.calc_mean_reward()))
             if self.configuration["graph"]:
+                self.overview_graph.end_episode(self.epsilon, reward)
                 self.overview_graph.update_and_display()
+            self.epsilon = self.epsilon * self.hyperparameters["epsilon_decay"]
+        return self.evaluations
