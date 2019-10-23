@@ -150,8 +150,8 @@ class LearningAgent:
                     if len(self.memory_buffer) > self.hyperparameters["min_memory_buffer_size_for_training"]:
                         self.training_step()
             action_chosen = self.get_action(current_state) if (not evaluative and not disable_random_actions) else self.get_best_action(current_state)
-            # if evaluative:
-            self.overview_graph.record_action(action_chosen)
+            if self.configuration["graph"]:
+                self.overview_graph.record_action(action_chosen)
             next_state, reward, is_terminal, info = self.env.step(action_chosen)
             next_state = np.append(next_state, [step_idx / self.hyperparameters["max_episode_length"]])
             if step_idx >= self.hyperparameters["max_episode_length"]:
