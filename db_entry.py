@@ -4,7 +4,6 @@ import numpy as np
 
 from learning_agent import LearningAgent
 from default_hyperparameters import hyperparameters
-db = MySQLdb.connect(host="dqn-db-instance.coib1qtynvtw.us-west-2.rds.amazonaws.com", user="dsmith682101", passwd=os.environ['MYSQL_PASS'], db="dqn_results")
 
 configuration = {
     "render": False,
@@ -18,6 +17,8 @@ la = LearningAgent(
 )
 
 evaluations = la.execute()
+
+db = MySQLdb.connect(host="dqn-db-instance.coib1qtynvtw.us-west-2.rds.amazonaws.com", user="dsmith682101", passwd=os.environ['MYSQL_PASS'], db="dqn_results")
 
 for evaluation, evaluation_idx in zip(evaluations, range(len(evaluations))):
     cur = db.cursor()
