@@ -37,8 +37,7 @@ class QNetwork:
                 _,
                 _,
                 _,
-                _,
-                final_embedding
+                final_embedding,
             ) = self.build_quantile_embedding(
                 quantile_thresholds_ph
             )
@@ -78,22 +77,20 @@ class QNetwork:
         self,
         quantile_thresholds_ph
     ):
-        quantile_thresholds_ph = tf.expand_dims(quantile_thresholds_ph, axis=2)
+        quantile_thresholds_ph = tf.reshape(quantile_thresholds_ph, [-1, self.hyperparameters["num_quantiles"], 1])
         # [batch_size, num_thresholds, 1]
-        tiled_thresholds = tf.tile(quantile_thresholds_ph, [1, 1, self.hyperparameters["embedding_repeat"]])
-        # [batch_size, num_thresholds, embedding_size]
-        embedding_step_size = None
+        embedding_step_size = tf.cast(tf.range(self.hyperparameters["embedding_repeat"]), tf.float32)
         if self.hyperparameters["embedding_step_type"] == "exponential":
-            embedding_step_size = tf.pow(tf.cast(2.0, tf.float32), tf.cast(tf.range(self.hyperparameters["embedding_repeat"]), tf.float32))
+            embedding_step_size = tf.pow(2.0, embedding_step_size)
         elif self.hyperparameters["embedding_step_type"] == "multiplicative":
-            embedding_step_size = tf.cast(tf.range(self.hyperparameters["embedding_repeat"]), tf.float32) 
+            embedding_step_size = 2.0 * embedding_step_size
         embedding_step_size = tf.reshape(embedding_step_size, [1, 1, self.hyperparameters["embedding_repeat"]])
-        unbounded_embedding = tiled_thresholds * embedding_step_size
-        bounded_embedding = None
+        unbounded_embedding = quantile_thresholds_ph * embedding_step_size
+        bounded_embedding = unbounded_embedding
         if self.hyperparameters["embedding_fn"] == "cos":
-            bounded_embedding = tf.math.cos(unbounded_embedding * math.pi)
+            bounded_embedding = tf.math.cos(bounded_embedding * math.pi)
         elif self.hyperparameters["embedding_fn"] == "sawtooth":
-            bounded_embedding = unbounded_embedding - tf.math.floor(unbounded_embedding)
+            bounded_embedding = bounded_embedding - tf.math.floor(bounded_embedding)
         final_embedding = tf.layers.dense(
             inputs=bounded_embedding,
             units=self.hyperparameters["environment_embedding_network_layers"][-1]["size"],
@@ -102,11 +99,10 @@ class QNetwork:
             reuse=tf.AUTO_REUSE,
         )
         return (
-            tiled_thresholds,
             embedding_step_size,
             unbounded_embedding,
             bounded_embedding,
-            final_embedding
+            final_embedding,
         )
     def build_training_operation(self):
         (
