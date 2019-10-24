@@ -12,8 +12,7 @@ hyperparameters = {
         "size": 256
     }],
     "embedding_repeat": 4,
-    "embedding_step_type": "exponential",
-    "embedding_fn": "cos",
+    "embedding_fn": "sawtooth",
     "layer_activation": tf.nn.leaky_relu,
     "gamma": 0.99,
     "tau": 0.001,
