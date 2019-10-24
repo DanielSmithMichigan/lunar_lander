@@ -16,7 +16,7 @@ hyperparameters = {
     "layer_activation": tf.nn.leaky_relu,
     "gamma": 0.99,
     "tau": 0.001,
-    "max_episodes": 2000,
+    "max_episodes": 1200,
     "max_episode_length": 1024,
     "batch_size": 64,
     "epsilon_shape": [[0, 1.0], [average_episode_len * 1300, 0.01]],
