@@ -90,6 +90,9 @@ class QNetwork:
         elif self.hyperparameters["embedding_fn"] == "cos":
             inner_product = i * math.pi * quantile_thresholds_ph
             shaped_embedding = tf.math.cos(inner_product)
+        elif self.hyperparameters["embedding_fn"] == "cos_exp":
+            inner_product = tf.pow(2.0, i) * math.pi * quantile_thresholds_ph
+            shaped_embedding = tf.math.cos(inner_product)
         final_embedding = tf.layers.dense(
             inputs=shaped_embedding,
             units=self.hyperparameters["environment_embedding_network_layers"][-1]["size"],
