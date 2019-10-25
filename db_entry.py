@@ -10,12 +10,18 @@ configuration = {
     "graph": False
 }
 
-hyperparameters["embedding_fn"] = os.environ['EMBEDDING_FN']
-hyperparameters["embedding_repeat"] = int(os.environ['EMBEDDING_REPEAT'])
-hyperparameters["epsilon_decay"] = 0.995
-hyperparameters["epsilon_multiplier_pct"] = 0.0
-
-experiment_name = "lunar_lander_" + os.environ['EMBEDDING_FN'] + "_" + os.environ['EMBEDDING_REPEAT']
+if int(os.environ['NUM_QUANTILES']) == 16:
+    experiment_name = "lunar_lander_quantile_16"
+    hyperparameters["epsilon_decay"] = 0.995
+    hyperparameters["epsilon_multiplier_pct"] = 0.0
+    hyperparameters["num_quantiles"] = 16
+elif int(os.environ['NUM_QUANTILES']) == 24:
+    experiment_name = "lunar_lander_quantile_24"
+    hyperparameters["epsilon_decay"] = 0.995
+    hyperparameters["epsilon_multiplier_pct"] = 0.0
+    hyperparameters["num_quantiles"] = 24
+else: 
+    experiment_name = "lunar_lander_new_exploration"
 
 la = LearningAgent(
     hyperparameters=hyperparameters,
