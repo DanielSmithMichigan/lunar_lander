@@ -12,6 +12,9 @@ configuration = {
 
 hyperparameters["embedding_fn"] = os.environ['EMBEDDING_FN']
 hyperparameters["embedding_repeat"] = int(os.environ['EMBEDDING_REPEAT'])
+hyperparameters["epsilon_decay"] = 0.995
+hyperparameters["epsilon_multiplier_pct"] = 0.0
+
 experiment_name = "lunar_lander_" + os.environ['EMBEDDING_FN'] + "_" + os.environ['EMBEDDING_REPEAT']
 
 la = LearningAgent(
