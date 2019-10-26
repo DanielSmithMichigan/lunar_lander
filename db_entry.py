@@ -10,22 +10,22 @@ configuration = {
     "graph": False
 }
 
-if int(os.environ['NUM_QUANTILES']) == 16:
-    experiment_name = "lunar_lander_quantile_16"
+num_quantiles = 8
+if "NUM_QUANTILES" in os.environ:
+    num_quantiles = int(num_quantiles)
+
+if num_quantiles != 8:
     hyperparameters["epsilon_decay"] = 0.995
     hyperparameters["epsilon_multiplier_pct"] = 0.0
-    hyperparameters["num_quantiles"] = 16
-elif int(os.environ['NUM_QUANTILES']) == 24:
-    experiment_name = "lunar_lander_quantile_24"
+    hyperparameters["num_quantiles"] = num_quantiles
+    experiment_name = "lunar_lander_quantile_" + str(num_quantiles)
+elif "QUANTILE_THRESHOLD_LOW" in os.environ:
+    hyperparameters["quantile_threshold_low"] = float(os.environ["QUANTILE_THRESHOLD_LOW"])
+    hyperparameters["quantile_threshold_high"] = float(os.environ["QUANTILE_THRESHOLD_HIGH"])
     hyperparameters["epsilon_decay"] = 0.995
     hyperparameters["epsilon_multiplier_pct"] = 0.0
-    hyperparameters["num_quantiles"] = 24
-elif int(os.environ['NUM_QUANTILES']) == 1:
-    experiment_name = "lunar_lander_quantile_1"
-    hyperparameters["epsilon_decay"] = 0.995
-    hyperparameters["epsilon_multiplier_pct"] = 0.0
-    hyperparameters["num_quantiles"] = 1
-else: 
+    experiment_name = "lunar_lander_thresholds_"+str(hyperparameters["quantile_threshold_low"])+"_"+str(hyperparameters["quantile_threshold_high"])
+else:
     experiment_name = "lunar_lander_new_exploration"
 
 la = LearningAgent(
