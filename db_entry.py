@@ -14,7 +14,7 @@ hyperparameters["epsilon_decay"] = 0.995
 hyperparameters["epsilon_multiplier_pct"] = 0.0
     
 if "NUM_QUANTILES" in os.environ:
-    num_quantiles = int(num_quantiles)
+    num_quantiles = int(os.environ["NUM_QUANTILES"])
     hyperparameters["num_quantiles"] = num_quantiles
     experiment_name = "lunar_lander_quantile_" + str(num_quantiles)
 elif "QUANTILE_THRESHOLD_LOW" in os.environ:
