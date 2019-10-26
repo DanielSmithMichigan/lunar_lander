@@ -20,6 +20,11 @@ elif int(os.environ['NUM_QUANTILES']) == 24:
     hyperparameters["epsilon_decay"] = 0.995
     hyperparameters["epsilon_multiplier_pct"] = 0.0
     hyperparameters["num_quantiles"] = 24
+elif int(os.environ['NUM_QUANTILES']) == 1:
+    experiment_name = "lunar_lander_quantile_1"
+    hyperparameters["epsilon_decay"] = 0.995
+    hyperparameters["epsilon_multiplier_pct"] = 0.0
+    hyperparameters["num_quantiles"] = 1
 else: 
     experiment_name = "lunar_lander_new_exploration"
 
