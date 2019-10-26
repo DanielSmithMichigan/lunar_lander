@@ -30,4 +30,6 @@ hyperparameters = {
     "kappa": 1.0,
     "learning_rate": 5e-4,
     "max_gradient_norm": 5.0,
+    "quantile_threshold_low": 0.0,
+    "quantile_threshold_high": 1.0,
 }

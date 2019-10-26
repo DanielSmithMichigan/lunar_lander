@@ -2,6 +2,8 @@ import numpy as np
 
 def generate_quantile_thresholds(hyperparameters, just_one=False):
     thresh = np.random.uniform(
+        low=hyperparameters["quantile_threshold_low"],
+        high=hyperparameters["quantile_threshold_high"],
         size=(
             1 if just_one else hyperparameters["batch_size"],
             hyperparameters["num_quantiles"]
