@@ -79,29 +79,31 @@ class QNetwork:
     ):
         quantile_thresholds_ph = tf.reshape(quantile_thresholds_ph, [-1, self.hyperparameters["num_quantiles"], 1])
         # [batch_size, num_thresholds, 1]
-        embedding_step_size = tf.cast(tf.range(self.hyperparameters["embedding_repeat"]), tf.float32)
-        if self.hyperparameters["embedding_step_type"] == "exponential":
-            embedding_step_size = tf.pow(2.0, embedding_step_size)
-        elif self.hyperparameters["embedding_step_type"] == "multiplicative":
-            embedding_step_size = 2.0 * embedding_step_size
-        embedding_step_size = tf.reshape(embedding_step_size, [1, 1, self.hyperparameters["embedding_repeat"]])
-        unbounded_embedding = quantile_thresholds_ph * embedding_step_size
-        bounded_embedding = unbounded_embedding
-        if self.hyperparameters["embedding_fn"] == "cos":
-            bounded_embedding = tf.math.cos(bounded_embedding * math.pi)
-        elif self.hyperparameters["embedding_fn"] == "sawtooth":
-            bounded_embedding = bounded_embedding - tf.math.floor(bounded_embedding)
+        i = tf.cast(tf.range(self.hyperparameters["embedding_repeat"]), tf.float32)
+        i = tf.reshape(i, [1, 1, self.hyperparameters["embedding_repeat"]])
+        shaped_embedding = None
+        inner_product = None
+        if self.hyperparameters["embedding_fn"] == "sawtooth":
+            inner_product = tf.pow(2.0, i) * quantile_thresholds_ph
+            shaped_embedding = inner_product - tf.math.floor(inner_product)
+            shaped_embedding = 2.0 * (shaped_embedding - 0.5)
+        elif self.hyperparameters["embedding_fn"] == "cos":
+            inner_product = i * math.pi * quantile_thresholds_ph
+            shaped_embedding = tf.math.cos(inner_product)
+        elif self.hyperparameters["embedding_fn"] == "cos_exp":
+            inner_product = tf.pow(2.0, i) * math.pi * quantile_thresholds_ph
+            shaped_embedding = tf.math.cos(inner_product)
         final_embedding = tf.layers.dense(
-            inputs=bounded_embedding,
+            inputs=shaped_embedding,
             units=self.hyperparameters["environment_embedding_network_layers"][-1]["size"],
             activation=self.hyperparameters["layer_activation"],
             name="quantile_embedding",
             reuse=tf.AUTO_REUSE,
         )
         return (
-            embedding_step_size,
-            unbounded_embedding,
-            bounded_embedding,
+            quantile_thresholds_ph,
+            inner_product,
+            shaped_embedding,
             final_embedding,
         )
     def build_training_operation(self):

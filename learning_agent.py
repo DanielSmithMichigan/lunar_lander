@@ -25,7 +25,7 @@ class LearningAgent:
         self.configuration = configuration
         self.env = gym.make(env_name)
         self.environment_step = 0
-        self.epsilon = 1.0
+        self.epsilon = self.hyperparameters["epsilon_initial"]
         self.sess = tf.Session()
         self.evaluations = []
         self.memory_buffer = deque([], maxlen=self.hyperparameters["max_memory_buffer_size"])
@@ -106,11 +106,12 @@ class LearningAgent:
         ]
     def get_action(
         self,
-        state
+        state,
+        epsilon
     ):
         if len(self.memory_buffer) < self.hyperparameters["min_memory_buffer_size_for_training"]:
             return self.env.action_space.sample()
-        if np.random.uniform() < self.epsilon:
+        if np.random.uniform() < epsilon:
             return self.env.action_space.sample()
         return self.get_best_action(state)
     def get_best_action(
@@ -136,6 +137,15 @@ class LearningAgent:
         evaluative,
         disable_random_actions
     ):
+        if not evaluative:
+            self.epsilon = self.epsilon * self.hyperparameters["epsilon_decay"]
+        epsilon = self.epsilon
+        if np.random.uniform() < self.hyperparameters["epsilon_multiplier_pct"]:
+            epsilon *= np.random.uniform(
+                low=self.hyperparameters["epsilon_multiplier_min"],
+                high=self.hyperparameters["epsilon_multiplier_max"]
+            )
+        epsilon = max(self.hyperparameters["epsilon_min"], min(self.hyperparameters["epsilon_max"], epsilon))
         current_state = self.env.reset()
         total_reward = 0
         if self.configuration["render"] and evaluative:
@@ -149,7 +159,7 @@ class LearningAgent:
                 if self.environment_step % self.hyperparameters["environment_steps_per_training_step"] == 0:
                     if len(self.memory_buffer) > self.hyperparameters["min_memory_buffer_size_for_training"]:
                         self.training_step()
-            action_chosen = self.get_action(current_state) if (not evaluative and not disable_random_actions) else self.get_best_action(current_state)
+            action_chosen = self.get_action(current_state, epsilon) if (not evaluative and not disable_random_actions) else self.get_best_action(current_state)
             if self.configuration["graph"]:
                 self.overview_graph.record_action(action_chosen)
             next_state, reward, is_terminal, info = self.env.step(action_chosen)
@@ -169,7 +179,7 @@ class LearningAgent:
                 self.env.render()
             if is_terminal:
                 break
-        return total_reward
+        return total_reward, epsilon
     def feed_dict_from_training_batch(
         self,
         training_batch
@@ -205,18 +215,17 @@ class LearningAgent:
         for episode_idx in range(self.hyperparameters["max_episodes"]):
             if self.configuration["graph"]:
                 self.overview_graph.init_episode()
-            self.episode(
+            _, epsilon = self.episode(
                 evaluative=False,
                 disable_random_actions=False,
             )
-            reward = self.episode(
+            reward, _ = self.episode(
                 evaluative=True,
                 disable_random_actions=True,
             )
             self.evaluations.append(reward)
-            print("ep: "+str(episode_idx) + " reward: "+str(self.overview_graph.calc_mean_reward()))
+            print("ep: "+str(episode_idx) + " reward: "+str(self.overview_graph.calc_mean_reward()) + " eps: " + str(self.epsilon))
             if self.configuration["graph"]:
-                self.overview_graph.end_episode(self.epsilon, reward)
+                self.overview_graph.end_episode(epsilon, reward)
                 self.overview_graph.update_and_display()
-            self.epsilon = self.epsilon * self.hyperparameters["epsilon_decay"]
         return self.evaluations
