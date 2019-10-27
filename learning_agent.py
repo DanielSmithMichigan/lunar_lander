@@ -137,6 +137,7 @@ class LearningAgent:
         evaluative,
         disable_random_actions
     ):
+        self.epsilon = current_epsilon(self.hyperparameters, self.training_episode_number)
         if not evaluative:
             self.epsilon = self.epsilon * self.hyperparameters["epsilon_decay"]
         epsilon = self.epsilon
@@ -212,7 +213,7 @@ class LearningAgent:
     ):
         self.sess.run(tf.global_variables_initializer())
         self.sess.run(self.hard_copy)
-        for episode_idx in range(self.hyperparameters["max_episodes"]):
+        for self.training_episode_number in range(self.hyperparameters["max_episodes"]):
             if self.configuration["graph"]:
                 self.overview_graph.init_episode()
             _, epsilon = self.episode(
@@ -224,7 +225,7 @@ class LearningAgent:
                 disable_random_actions=True,
             )
             self.evaluations.append(reward)
-            print("ep: "+str(episode_idx) + " reward: "+str(self.overview_graph.calc_mean_reward()) + " eps: " + str(self.epsilon))
+            print("ep: "+str(self.training_episode_number) + " reward: "+str(self.overview_graph.calc_mean_reward()) + " eps: " + str(self.epsilon))
             if self.configuration["graph"]:
                 self.overview_graph.end_episode(epsilon, reward)
                 self.overview_graph.update_and_display()

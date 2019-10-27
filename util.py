@@ -13,12 +13,12 @@ def generate_quantile_thresholds(hyperparameters, just_one=False):
 
 def current_epsilon(
     hyperparameters,
-    environment_step,
+    episode_number,
 ):
     y = 1
     x = 0
     slope = (hyperparameters["epsilon_shape"][1][y] - hyperparameters["epsilon_shape"][0][y]) / (hyperparameters["epsilon_shape"][1][x] - hyperparameters["epsilon_shape"][0][x])
-    steps_in_descent = environment_step - hyperparameters["epsilon_shape"][0][x]
+    steps_in_descent = episode_number - hyperparameters["epsilon_shape"][0][x]
     return np.clip(steps_in_descent * slope + hyperparameters["epsilon_shape"][0][y], hyperparameters["epsilon_shape"][1][y], hyperparameters["epsilon_shape"][0][y])
 
 def extract_data_for_placeholder(
